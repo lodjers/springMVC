@@ -11,6 +11,8 @@ import ru.lodjers.springcourse.models.Person;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 @Component
 public class PersonDAO {
 
@@ -27,6 +29,10 @@ public class PersonDAO {
         return jdbcTemplate.query("SELECT * FROM Person WHERE id=?", new Object[]{id},
                         new BeanPropertyRowMapper<>(Person.class))
                 .stream().findAny().orElse(null);
+    }
+    public Optional<Person> show(String email) {
+        return jdbcTemplate.query("SELECT * FROM Person WHERE email=?", new Object[] {email},
+                new BeanPropertyRowMapper<>(Person.class)).stream().findAny();
     }
     public void save(Person person) {
         jdbcTemplate.update("INSERT INTO Person(name, age, email) VALUES(?, ?, ?)",
