@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import ru.lodjers.springcourse.models.Book;
 import ru.lodjers.springcourse.models.Person;
 
 import java.sql.*;
@@ -23,76 +24,28 @@ public class PersonDAO {
     }
 
     public List<Person> index() {
-        return jdbcTemplate.query("SELECT * FROM Person", new BeanPropertyRowMapper<>(Person.class));
+        return jdbcTemplate.query("SELECT * FROM Person", new PersonMapper());
     }
     public Person show(int id) throws SQLException {
-        return jdbcTemplate.query("SELECT * FROM Person WHERE id=?", new Object[]{id},
-                        new BeanPropertyRowMapper<>(Person.class))
-                .stream().findAny().orElse(null);
+        return jdbcTemplate.query("SELECT * FROM Person WHERE person_id=?", new Object[]{id},
+                        new PersonMapper()).stream().findAny().orElse(null);
     }
-    public Optional<Person> show(String email) {
-        return jdbcTemplate.query("SELECT * FROM Person WHERE email=?", new Object[] {email},
-                new BeanPropertyRowMapper<>(Person.class)).stream().findAny();
+    public List<Book> booksOfPerson(int id) throws SQLException {
+        return jdbcTemplate.query("SELECT * " +
+                        "FROM Person JOIN book on person.person_id = book.person_id WHERE person.person_id = ?",
+                new Object[]{id}, new BookMapper());
     }
     public void save(Person person) {
-        jdbcTemplate.update("INSERT INTO Person(name, age, email, address) VALUES(?, ?, ?, ?)",
-                person.getName(), person.getAge(), person.getEmail(), person.getAddress());
+        jdbcTemplate.update("INSERT INTO Person(FIO, yearOfBirth) VALUES(?, ?)",
+                person.getFIO(), person.getYearOfBirth());
     }
     public void update(int id, Person updatedPerson) throws SQLException {
-        jdbcTemplate.update("UPDATE Person SET name=?, age=?, email=?, address=? WHERE id=?",
-                updatedPerson.getName(), updatedPerson.getAge(),
-                updatedPerson.getEmail(), updatedPerson.getAddress(), id);
+        jdbcTemplate.update("UPDATE Person SET FIO=?, yearOfBirth=? WHERE person_id=?",
+                updatedPerson.getFIO(), updatedPerson.getYearOfBirth(), id);
     }
     public void delete(int id) throws SQLException {
-        jdbcTemplate.update("DELETE FROM Person WHERE id=?", id);
+        jdbcTemplate.update("DELETE FROM Person WHERE person_id=?", id);
     }
 
-    /////////////////// Тест пакетной вставки
 
-    public void testMultipleUpdate() {
-        List<Person> people = create1000People();
-
-        long before = System.currentTimeMillis();
-
-        for (Person person: people) {
-            jdbcTemplate.update("INSERT INTO Person VALUES(?, ?, ?, ?)", person.getId(), person.getName(),
-                    person.getAge(), person.getEmail());
-        }
-
-        long after = System.currentTimeMillis();
-        System.out.println("Time: " + (after - before));
-    }
-
-    public void testBatchUpdate() {
-        List<Person> people = create1000People();
-
-        long before = System.currentTimeMillis();
-
-        jdbcTemplate.batchUpdate("INSERT INTO Person VALUES(?, ?, ?, ?)",
-                new BatchPreparedStatementSetter() {
-                    @Override
-                    public void setValues(PreparedStatement preparedStatement, int i) throws SQLException {
-                        preparedStatement.setInt(1, people.get(i).getId());
-                        preparedStatement.setString(2, people.get(i).getName());
-                        preparedStatement.setInt(3, people.get(i).getAge());
-                        preparedStatement.setString(4, people.get(i).getEmail());
-                    }
-
-                    @Override
-                    public int getBatchSize() {
-                        return people.size();
-                    }
-                });
-
-        long after = System.currentTimeMillis();
-        System.out.println("Time: " + (after - before));
-    }
-    private List<Person> create1000People() {
-        List<Person> people = new ArrayList<>();
-
-        for (int i = 0; i < 1000; i++) {
-            people.add(new Person(i, "Name" + i, "test" + i + "@mail.ru", 30, "some address"));
-        }
-        return people;
-    }
 }

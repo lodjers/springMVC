@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import ru.lodjers.springcourse.dao.PersonDAO;
 import ru.lodjers.springcourse.models.Person;
-import ru.lodjers.springcourse.util.PersonValidator;
 
 import javax.validation.Valid;
 import java.sql.SQLException;
@@ -23,37 +22,35 @@ import java.sql.SQLException;
 public class PeopleController {
 
     private final PersonDAO personDAO;
-    private final PersonValidator personValidator;
 
     @Autowired
-    public PeopleController(PersonDAO personDAO, PersonValidator personValidator) {
+    public PeopleController(PersonDAO personDAO) {
         this.personDAO = personDAO;
-        this.personValidator = personValidator;
     }
 
     @GetMapping()
     public String index(Model model) {
         model.addAttribute("people", personDAO.index());
-        return "/index";
+        return "people/index";
     }
     @GetMapping("/{id}")
     public String show(@PathVariable("id") int id, Model model) throws SQLException {
         model.addAttribute("person",personDAO.show(id));
-        return "/show";
+        model.addAttribute("booksOfPerson", personDAO.booksOfPerson(id));
+        return "people/show";
     }
 
     @GetMapping("/new")
     public String newPerson(Model model) {
         model.addAttribute("person", new Person());
-        return "/new";
+        return "people/new";
     }
     @PostMapping
     public String create(@ModelAttribute("person") @Valid Person person,
                          BindingResult bindingResult) {
-        personValidator.validate(person, bindingResult);
 
         if (bindingResult.hasErrors())
-            return "/new";
+            return "people/new";
 
         personDAO.save(person);
         return "redirect:/people";
@@ -61,15 +58,14 @@ public class PeopleController {
     @GetMapping("/{id}/edit")
     public String edit(Model model, @PathVariable("id") int id) throws SQLException {
         model.addAttribute("person", personDAO.show(id));
-        return "/edit";
+        return "people/edit";
     }
     @PatchMapping("/{id}")
     public String update(@ModelAttribute("person") @Valid Person person, BindingResult bindingResult,
                          @PathVariable("id") int id) throws SQLException {
-        personValidator.validate(person, bindingResult);
 
         if (bindingResult.hasErrors()) {
-            return "/edit";
+            return "people/edit";
         }
         personDAO.update(id, person);
         return "redirect:/people";
