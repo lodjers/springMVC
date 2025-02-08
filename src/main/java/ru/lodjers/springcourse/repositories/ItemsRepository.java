@@ -2,16 +2,14 @@ package ru.lodjers.springcourse.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import ru.lodjers.springcourse.models.Item;
 import ru.lodjers.springcourse.models.Person;
 
 import java.util.List;
 
 @Repository
-public interface PeopleRepository extends JpaRepository<Person, Integer> {
-    List<Person> findByName(String name);
+public interface ItemsRepository extends JpaRepository<Item, Integer> {
+    List<Item> findByItemName(String itemName);
 
-    List<Person> findByNameOrderByAge(String name);
-
-    List<Person> findByNameStartingWith(String startingWith);
-
+    List<Item> findByOwner(Person owner);
 }
