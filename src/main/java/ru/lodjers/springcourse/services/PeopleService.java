@@ -3,6 +3,7 @@ package ru.lodjers.springcourse.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.lodjers.springcourse.models.Mood;
 import ru.lodjers.springcourse.models.Person;
 import ru.lodjers.springcourse.repositories.PeopleRepository;
 
@@ -33,6 +34,8 @@ public class PeopleService{
     }
     @Transactional
     public void save(Person person) {
+
+        person.setMood(Mood.CALM);
         person.setCreatedAt(new Date());
 
         peopleRepository.save(person);
